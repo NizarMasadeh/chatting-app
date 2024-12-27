@@ -1,1 +1,87 @@
 /* You can add global styles to this file, and also import other style files */
+@import "primeflex/primeflex.css";
+@import "primeicons/primeicons.css";
+
+
+@font-face {
+    font-family: nzrm_font;
+    src: url("./assets/Parkinsans-VariableFont_wght.ttf");
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: nzrm_font;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.fadeIn {
+    animation: fadeIn .8s;
+}
+
+:root {
+    /* Main Background Colors */
+    --bg-primary: #1a1b1e;
+    --bg-secondary: #212226;
+    --bg-tertiary: #2a2b30;
+
+    /* Surface Colors */
+    --surface-1: #2d2e34;
+    --surface-2: #3a3b42;
+    --surface-3: #434449;
+
+    /* Text Colors */
+    --text-primary: rgba(255, 255, 255, 0.87);
+    --text-secondary: rgba(255, 255, 255, 0.6);
+    --text-disabled: rgba(255, 255, 255, 0.38);
+
+    /* Brand Colors */
+    --accent-primary: #7f9cf5;
+    --accent-secondary: #6b7ed9;
+    --accent-hover: #8da4ff;
+
+    /* Feedback Colors */
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --error: #f87171;
+    --info: #60a5fa;
+
+    /* Border Colors */
+    --border-light: rgba(255, 255, 255, 0.12);
+    --border-medium: rgba(255, 255, 255, 0.16);
+
+    /* Shadow Colors */
+    --shadow-color: rgba(0, 0, 0, 0.25);
+    --shadow-sm: 0 1px 2px var(--shadow-color);
+    --shadow-md: 0 2px 4px var(--shadow-color);
+    --shadow-lg: 0 4px 6px var(--shadow-color);
+
+    /* Spacing Scale */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+
+    /* Border Radius */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-full: 9999px;
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-normal: 250ms ease;
+    --transition-slow: 350ms ease;
+
+    --purple: #451145;
+}

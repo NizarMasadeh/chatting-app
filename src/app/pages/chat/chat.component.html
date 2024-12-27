@@ -1,0 +1,33 @@
+<div class="chat-container fadeIn">
+
+    <div class="chat-header flex relative fadeIn" style="justify-content: center; align-items: center; gap: 20px;">
+        <div *ngIf="selectedChat" (click)="removeSelected()" class="back-btn" [ngClass]="!selectedChat ? 'fadeIn' : ''"
+            style="position: absolute; left: 20px">
+            <i class="pi pi-angle-left"></i>
+        </div>
+        <h2>{{selectedChat?.full_name || "Select a user to chat"}}</h2>
+    </div>
+
+    <div *ngIf="!selectedChat"
+        class="chat-select flex flex-column justify-content-center align-items-center mt-5 gap-4">
+
+        <div class="user-card" [ngClass]="!selectedChat ? 'fadeIn' : ''" *ngFor="let user of chatUsers?.users">
+            <img src="https://placehold.co/80x80" alt="Profile Image" class="profile-image">
+            <h3 class="user-name">{{user.full_name}}</h3>
+            <button pButton class="chat-button" (click)="onUserSelect(user)">Chat</button>
+        </div>
+    </div>
+
+    <div *ngIf="selectedChat" class="chat-body" [ngClass]="selectedChat ? 'fadeIn' : ''" #chatBody>
+        <div *ngFor="let message of messages" class="message" [class.sent]="message.id == 69" [@slideInOut]>
+            <p>{{ message.text }}</p>
+        </div>
+    </div>
+
+    <div *ngIf="selectedChat" [ngClass]="selectedChat ? 'fadeIn' : ''" class="chat-input">
+        <input type="text" [(ngModel)]="inputMessage" placeholder="Type a message..." (keyup.enter)="sendMessage()" />
+        <button (click)="sendMessage()">
+            <i class="pi pi-send"></i>
+        </button>
+    </div>
+</div>
