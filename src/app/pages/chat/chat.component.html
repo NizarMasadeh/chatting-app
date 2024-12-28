@@ -4,10 +4,14 @@
         <div *ngIf="selectedChat" (click)="removeSelected()" class="back-btn" [ngClass]="!selectedChat ? 'fadeIn' : ''"
             style="position: absolute; left: 20px">
             <i class="pi pi-angle-left"></i>
+
         </div>
-        <div (click)="onLogout()" class="back-btn fadeIn"
-            style="position: absolute; right: 20px">
+
+        <div (click)="onLogout()" class="back-btn fadeIn" style="position: absolute; right: 20px">
             <i class="pi" [ngClass]="isLoggingOut ? 'pi-spin pi-spinner' : 'pi-power-off'"></i>
+        </div>
+        <div class="user_pfp" style="height: 4rem;">
+            <img class="h-full border-circle" [src]="selectedChat?.pfp_img" alt="">
         </div>
         <h2>{{selectedChat?.full_name || "Chat with smn"}}</h2>
     </div>
@@ -15,8 +19,9 @@
     <div *ngIf="!selectedChat"
         class="chat-select flex flex-column justify-content-center align-items-center mt-5 gap-4">
 
-        <div class="user-card" [ngClass]="!selectedChat && !isUsersLoading ? 'fadeIn' : ''" [hidden]="isUsersLoading" *ngFor="let user of filteredChatUsers">
-            <img src="https://placehold.co/80x80" alt="Profile Image" class="profile-image">
+        <div class="user-card" [ngClass]="!selectedChat && !isUsersLoading ? 'fadeIn' : ''" [hidden]="isUsersLoading"
+            *ngFor="let user of filteredChatUsers">
+            <img [src]="user.pfp_img" alt="Profile Image" class="profile-image">
             <h3 class="user-name">{{user.full_name}}</h3>
             <button pButton class="chat-button" (click)="onUserSelect(user)">Chat</button>
         </div>
@@ -39,7 +44,8 @@
         </div>
     </div>
 
-    <div *ngIf="messages?.length === 0 && selectedChat" class="empty-message flex justify-content-center align-items-center fadeIn" style="height: 70rem;">
+    <div *ngIf="messages?.length === 0 && selectedChat"
+        class="empty-message flex justify-content-center align-items-center fadeIn" style="height: 70rem;">
         <h2>Send something 🐥</h2>
     </div>
 

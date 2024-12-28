@@ -57,7 +57,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   filteredChatUsers: any[] = [];
   selectedChat: any;
   userId: any;
-
+  isUseresLoading = false;
   messages: any[] = [];
   inputMessage = '';
   isLoggingOut = false;
@@ -111,6 +111,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       this.chatUsers = this.transferState.get(CHAT_USERS_KEY, []);
       this.filterUsers();
     } else {
+      this.isUsersLoading = true;
       this._chatService.getUsers().subscribe({
         next: (res: any) => {
           this.chatUsers = res.users;
@@ -124,8 +125,11 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
           if (this.isBrowser) {
             console.log("Assigned to chat users (browser):", this.chatUsers);
           }
+          this.isUseresLoading = false;
         },
         error: (error) => {
+          this.isUseresLoading = false;
+
           console.error("Error fetching users", error);
         },
         complete: () => {
@@ -134,6 +138,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       });
     }
   }
+  
 
   private filterUsers() {
     if(this.isBrowser) {
