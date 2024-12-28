@@ -5,6 +5,8 @@ import { ButtonModule } from 'primeng/button';
 import { AuthService } from '../../services/auth.service';
 import { LocalstorageService } from '../../services/localStorage/localstorage.service';
 import { Router } from '@angular/router';
+import { MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
 
 @Component({
   selector: 'app-login',
@@ -12,10 +14,12 @@ import { Router } from '@angular/router';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    ButtonModule
+    ButtonModule,
+    ToastModule
   ],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.scss'
+  styleUrl: './login.component.scss',
+  providers: [MessageService]
 })
 export class LoginComponent {
 
@@ -23,7 +27,8 @@ export class LoginComponent {
     private _authService: AuthService,
     private localStorage: LocalstorageService,
     private _router: Router,
-    private _cdr: ChangeDetectorRef
+    private _cdr: ChangeDetectorRef,
+    private _messageService: MessageService
   ) { }
 
   loginForm: FormGroup = new FormGroup({
@@ -51,7 +56,6 @@ export class LoginComponent {
 
       this._authService.onLogin(this.loginForm.value).subscribe({
         next: (res: any) => {
-          console.log("Logged in: ", res);
           this.localStorage.setItem('userToken', res.token);
           this.localStorage.setItem('userName', res.user.fullName);
           this.localStorage.setItem('userEmail', res.user.email);
@@ -59,6 +63,11 @@ export class LoginComponent {
 
           this.isLoggingIn = false;
 
+          this._messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Heyyyyyyyy'
+          })
           setTimeout(() => {
             this._router.navigate(['/chat']);
           }, 1200);
@@ -82,10 +91,14 @@ export class LoginComponent {
       this.isRegistering = true;
 
       this._authService.onRegister(registerData).subscribe({
-        next: (res: any) => {
-          console.log("Registered successfully: ", res);
+        next: () => {
           this.isRegistering = false;
-
+          this.registerForm.reset();
+          this._messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Account registered!'
+          })
           setTimeout(() => {
             this.formToggle = false;
             this._cdr.detectChanges();
@@ -93,14 +106,18 @@ export class LoginComponent {
         },
         error: (error) => {
           console.error("Error registering:", error);
+          this._messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error creating account!'
+          })
           this.isRegistering = false;
         }
       })
     }
   }
 
-  onToggle(event: any) {
-    console.log(this.formToggle);
+  onToggle() {
     if (!this.formToggle) {
       this.formToggle = false
     } else {

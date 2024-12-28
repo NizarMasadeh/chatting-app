@@ -5,9 +5,15 @@
     --bg-color: #fff;
     --bg-color-alt: #666;
     --main-color: #323232;
-    /* display: flex; */
-    /* flex-direction: column; */
-    /* align-items: center; */
+    
+    width: 100%;
+    min-height: 100vh; // This ensures full height
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    // Add position relative for toast positioning context
+    position: relative;
 }
 
 /* switch card */
@@ -197,4 +203,43 @@
     font-weight: 600;
     color: var(--font-color);
     cursor: pointer;
+}
+
+.card-switch {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    max-width: 300px; // Constrain maximum width
+}
+
+// Update switch positioning
+.switch {
+    transform: none; // Remove the negative transform
+    position: relative;
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+// Update flip card positioning
+.flip-card__inner {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+// Fix toast positioning
+:host ::ng-deep {
+    .p-toast {
+        width: 90%;
+        max-width: 400px;
+        
+        // Center the toast
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
 }

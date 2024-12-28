@@ -1,23 +1,23 @@
 import { trigger, transition, style, animate } from '@angular/animations';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { AfterViewChecked, Component, ElementRef, Inject, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
+import { CommonModule, isPlatformBrowser, isPlatformServer } from '@angular/common';
+import { AfterViewChecked, Component, ElementRef, Inject, OnDestroy, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms'
 import { ChatService } from '../../services/chat.service';
 import { ButtonModule } from 'primeng/button';
-import { MessageService } from '../../services/messages/message.service';
+import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
+import { SkeletonModule } from 'primeng/skeleton';
+import Pusher from 'pusher-js';
+import { TransferState, StateKey, makeStateKey } from '@angular/core';
 
-interface Message {
-  text: string;
-  sent: boolean;
-  id: number;
-}
-
+const CHAT_USERS_KEY: StateKey<any[]> = makeStateKey<any[]>('chatUsers');
 @Component({
   selector: 'app-chat',
   imports: [
     CommonModule,
     FormsModule,
-    ButtonModule
+    ButtonModule,
+    SkeletonModule
   ],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss',
@@ -33,63 +33,130 @@ interface Message {
     ]),
   ],
 })
-export class ChatComponent implements OnInit, AfterViewChecked {
+export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   private isBrowser: boolean;
+  private isServer: boolean;
+
+  pusher: any;
+  channel: any;
+
+  isUsersLoading = false;
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: object,
     private _chatService: ChatService,
-    // private _messageSercice: MessageService
+    private _authService: AuthService,
+    private _router: Router,
+    private transferState: TransferState,
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
+    this.isServer = isPlatformServer(this.platformId);
   }
 
   chatUsers: any;
+  filteredChatUsers: any[] = [];
   selectedChat: any;
+  userId: any;
 
-  messages: Message[] = [
-    {
-      text: 'test', sent: false, id: 100
-    },
-    {
-      text: 'Meee', sent: true, id: 69
-
-    },
-    {
-      text: 'this is me', sent: true, id: 69
-
-    },
-    {
-      text: 'this is you', sent: false, id: 100
-
-    },
-    {
-      text: 'Yupp', sent: false, id: 100
-
-    }
-  ];
+  messages: any[] = [];
   inputMessage = '';
-
+  isLoggingOut = false;
+  
   @ViewChild('chatBody') private chatBody!: ElementRef;
 
 
   ngOnInit() {
     this.getChatUsers();
-    // this._messageSercice.setUpSocket();
+    this.getMessages();
+    if(this.isBrowser) {
+
+      this._chatService.message$.subscribe({
+        next: (res: any) => {
+          if(res !== null) {
+            if(res.sender_id !== this.userId) {
+
+          this.messages.push(res);
+        }
+        }
+        }
+      })
+      this.initializePusher();
+    }
   }
 
+  private initializePusher() {
+    this.pusher = new Pusher('1aaf650c0e2ae5d6f868', {
+      cluster: 'ap2'
+    });
+
+    this.channel = this.pusher.subscribe('lamoor-channel');
+    this.channel.bind('new-message', (message: any) => {
+      if (message.sender_id !== this.userId) {
+        this.messages = [...this.messages, message];
+      }
+    });
+
+    this.pusher.connection.bind('connected', () => {
+      console.log('Connected to Pusher');
+    });
+
+    this.pusher.connection.bind('error', (err: any) => {
+      console.log('Pusher connection error:', err);
+    });
+  }
+
+
   getChatUsers() {
-    this._chatService.getUsers().subscribe({
+    if (this.transferState.hasKey(CHAT_USERS_KEY)) {
+      this.chatUsers = this.transferState.get(CHAT_USERS_KEY, []);
+      this.filterUsers();
+    } else {
+      this._chatService.getUsers().subscribe({
+        next: (res: any) => {
+          this.chatUsers = res.users;
+          this.filterUsers();
+          console.log("Got chat users from API:", this.chatUsers);
+          
+          if (this.isServer) {
+            this.transferState.set(CHAT_USERS_KEY, this.chatUsers);
+          }
+          
+          if (this.isBrowser) {
+            console.log("Assigned to chat users (browser):", this.chatUsers);
+          }
+        },
+        error: (error) => {
+          console.error("Error fetching users", error);
+        },
+        complete: () => {
+          this.isUsersLoading = false;
+        }
+      });
+    }
+  }
+
+  private filterUsers() {
+    if(this.isBrowser) {
+      this.userId = localStorage.getItem('userId');
+
+    this.filteredChatUsers = this.chatUsers.filter((user: any) => user.id !== this.userId);
+    console.log("Filtered: ", this.filteredChatUsers);
+    
+    this.isUsersLoading = false;
+    }
+  }
+
+  getMessages() {
+    this._chatService.getMessages().subscribe({
       next: (res: any) => {
-        console.log("Users: ", res);
-        this.chatUsers = res;
-
+        this.messages = res.messages;
       }, error: (error) => {
-        console.error("Error fetching users", error);
-
+        console.error("Error fetching messages: ", error)
+        
       }
     })
   }
+
 
   onUserSelect(user: any) {
     this.selectedChat = user;
@@ -106,25 +173,25 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 
   sendMessage() {
     if (this.inputMessage.trim()) {
-      this.messages.push({ text: this.inputMessage, sent: true, id: 69 });
+
+      const message = {
+        sender_id: this.userId,
+        receiver_id: this.selectedChat.id,
+        message: this.inputMessage,
+      }
+
+      this.messages.push(message);
+
+      this._chatService.sendMessage(message).subscribe({
+        next: (res: any) => {
+        }, error: (error) => {
+          console.error("Error sending message: ", error);
+        }
+      })
       this.inputMessage = '';
-      this.reply();
     }
   }
 
-  reply() {
-    setTimeout(() => {
-      const responses = [
-        "Hello! How can I help?",
-        "Great to hear from you!",
-        "I'm here to chat.",
-        "Feel free to ask anything!",
-        "What's on your mind?",
-      ];
-      const replyMessage = responses[Math.floor(Math.random() * responses.length)];
-      this.messages.push({ text: replyMessage, sent: false, id: 100 });
-    }, 1000);
-  }
 
   private scrollToBottom(): void {
     try {
@@ -133,5 +200,37 @@ export class ChatComponent implements OnInit, AfterViewChecked {
       console.error('Scroll error:', err);
     }
   }
+
+  onLogout() {
+    this.isLoggingOut = true;
+
+    this._authService.onLogout().subscribe({
+      next: (res: any) => {
+        console.log("Logged out successfully", res);
+        localStorage.clear();
+
+        setTimeout(() => {
+          this._router.navigate(['/login']);
+        }, 1000);
+        this.isLoggingOut = false;
+      }, error: (error) => {
+        console.error("Error logging out", error);
+        this.isLoggingOut = false;
+
+      }
+    });
+  }
+
+
+  ngOnDestroy() {
+    if (this.channel) {
+      this.channel.unbind_all();
+      this.channel.unsubscribe();
+    }
+    if (this.pusher) {
+      this.pusher.disconnect();
+    }
+  }
+
 }
 

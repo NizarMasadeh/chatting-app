@@ -5,23 +5,42 @@
             style="position: absolute; left: 20px">
             <i class="pi pi-angle-left"></i>
         </div>
-        <h2>{{selectedChat?.full_name || "Select a user to chat"}}</h2>
+        <div (click)="onLogout()" class="back-btn fadeIn"
+            style="position: absolute; right: 20px">
+            <i class="pi" [ngClass]="isLoggingOut ? 'pi-spin pi-spinner' : 'pi-power-off'"></i>
+        </div>
+        <h2>{{selectedChat?.full_name || "Chat with smn"}}</h2>
     </div>
 
     <div *ngIf="!selectedChat"
         class="chat-select flex flex-column justify-content-center align-items-center mt-5 gap-4">
 
-        <div class="user-card" [ngClass]="!selectedChat ? 'fadeIn' : ''" *ngFor="let user of chatUsers?.users">
+        <div class="user-card" [ngClass]="!selectedChat && !isUsersLoading ? 'fadeIn' : ''" [hidden]="isUsersLoading" *ngFor="let user of filteredChatUsers">
             <img src="https://placehold.co/80x80" alt="Profile Image" class="profile-image">
             <h3 class="user-name">{{user.full_name}}</h3>
             <button pButton class="chat-button" (click)="onUserSelect(user)">Chat</button>
         </div>
+
+        <div class="skeletons flex flex-column gap-3 fadeIn" *ngIf="isUsersLoading">
+            <p-skeleton width="16rem" height="11rem" />
+            <p-skeleton width="16rem" height="11rem" />
+            <p-skeleton width="16rem" height="11rem" />
+            <p-skeleton width="16rem" height="11rem" />
+        </div>
+
+        <div *ngIf="chatUsers?.length === 0" class="flex justify-content-center align-items-center fadeIn">
+            <p>No users to chat with</p>
+        </div>
     </div>
 
     <div *ngIf="selectedChat" class="chat-body" [ngClass]="selectedChat ? 'fadeIn' : ''" #chatBody>
-        <div *ngFor="let message of messages" class="message" [class.sent]="message.id == 69" [@slideInOut]>
-            <p>{{ message.text }}</p>
+        <div *ngFor="let message of messages" class="message" [class.sent]="message.sender_id == userId" [@slideInOut]>
+            <p>{{ message.message }}</p>
         </div>
+    </div>
+
+    <div *ngIf="messages?.length === 0 && selectedChat" class="empty-message flex justify-content-center align-items-center fadeIn" style="height: 70rem;">
+        <h2>Send something 🐥</h2>
     </div>
 
     <div *ngIf="selectedChat" [ngClass]="selectedChat ? 'fadeIn' : ''" class="chat-input">

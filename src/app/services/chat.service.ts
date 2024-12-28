@@ -1,30 +1,27 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { environment } from '../../environments/environment.development';
+import { isPlatformBrowser } from '@angular/common';
+import Pusher from 'pusher-js';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ChatService {
-  socket: Socket | undefined;
+  private isBrowser: boolean;
+
+  private messageSubscription = new BehaviorSubject<any>(null);
+  message$ = this.messageSubscription.asObservable();
 
   constructor(
+    @Inject(PLATFORM_ID) private platformId: object,
     private _httpClient: HttpClient,
   ) {
-    // this.socket = io(environment.apiUrl);
-
+    this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
-  setUpSocket(): void {
-    // const merchantId = localStorage.getItem('userId');
-
-    // this.socket.on('messages', (res: any) => {
-    //   console.log("Socket connected: ", res);
-
-    // })
-  }
   private getHeaders(): HttpHeaders {
 
     return new HttpHeaders({
@@ -33,6 +30,15 @@ export class ChatService {
     });
 
   }
+
+  getMessages(): Observable<any> {
+    return this._httpClient.get(`${environment.server}lamoor/messages`);
+  }
+
+  sendMessage(message: any): Observable<any> {
+    return this._httpClient.post(`${environment.server}lamoor/messages`, message);
+  }
+
   getUsers(): Observable<any> {
     return this._httpClient.get(`${environment.server}users?userType="Chat User"`, { headers: this.getHeaders() });
   }
